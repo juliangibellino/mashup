@@ -1,8 +1,35 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Mashup</title>
-  </head>
-  <body>
-  </body>
+<!doctype html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/main.css">
+        <script src="js/libs/modernizr-2.8.0.min.js"></script>
+        
+
+        
+
+        <!--<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places&sensor=true"></script>-->
+
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+
+        <div id="location-finder">
+            <input id="location" placeholder="Enter your address" type="text"></input>
+            <button id="location-submit">Search</button>
+        </div>
+        
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
+        <script src="js/libs/require.js"></script>
+        <script src="js/plugins.js"></script>
+        <script src="js/main.js"></script>
+
+    </body>
 </html>
