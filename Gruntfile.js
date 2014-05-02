@@ -18,6 +18,10 @@ module.exports = function(grunt) {
                 files: ['js/src/**/*.js', 'js/src/*.js'],
                 tasks: ['requirejs:weather']
             },
+            jst_weather:{
+                files: ['js/src/templates/*.jst'],
+                tasks: ['jst:weather']
+            },
         },
         requirejs: {
             weather:{
@@ -29,14 +33,33 @@ module.exports = function(grunt) {
                     optimize: "none"
                 }
             }   
+        },
+        jst: {
+            weather: {
+                options: {
+              namespace: 'templates',
+              amd: true,
+              prettify: true,
+              uglify: true,
+              processName: function(filepath) {
+                var filepath = filepath.split("/"),
+                    filepath = filepath[filepath.length - 1].replace('.jst', '');
+                return filepath;
+              }
+                },
+                files: {
+                    "js/src/templates.js": ["js/src/templates/*.jst"]
+                }
+            }
         }
     });
 
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-html-validation');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
+    grunt.loadNpmTasks('grunt-contrib-jst');
     grunt.loadNpmTasks('grunt-contrib-watch');
 
     grunt.registerTask('default', ['watch']);
-    grunt.registerTask('weatherApp', ['requirejs:weather']);
+    grunt.registerTask('weatherApp', ['requirejs:weather', 'jst:weather']);
 };

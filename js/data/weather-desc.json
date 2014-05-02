@@ -1,0 +1,30 @@
+"conditions": [
+	{
+		"type": "sunny",
+		"desc": ["sunny", "clear", "mostlysunny", "partlysunny", "unknown"]
+	},
+	{
+		"type": "cloudy",
+		"desc":["cloudy", "mostlycloudy", "partlycloudy"]
+	},
+	{
+		"type": "fog",
+		"desc": ["fog", "hazy"]
+	},
+	{
+		"type": "rain",
+		"desc": ["chancerain", "rain" ]
+	},
+	{
+		"type": "snow",
+		"desc": ["chanceflurries", "chancesnow", "flurries", "snow"]
+	},
+	{
+		"type": "icy",
+		"desc": ["chancesleet", "sleet"]
+	},
+	{
+		"type": "thunderstorms",
+		"desc": ["chancetstorms", "tstorms"]
+	}	
+]
