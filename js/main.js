@@ -25,15 +25,69 @@ define('models/location',['backbone'], function(Backbone){
 define('models/weather',['backbone'], function(Backbone){
 	//SearchQuery Model to store query
 	var Weather = Backbone.Model.extend({
-		url: '/js/data/weather-forecast.json'
+		coordinates: null,
+		url: function(){
+			var uri = "http://api.wunderground.com/api/",
+				keyId = "3fa77c5415098e67",
+				query = '/conditions/q/',
+				geo = this.coordinates.lat + "," + this.coordinates.lng,
+				dataType = ".json?callback=?";
+
+		 	var endpoint = uri + keyId + query + geo + dataType;
+
+			return endpoint;
+		},
+		setProp: function(prop, val){
+			this[prop] = val;
+		}
 	});
 	return Weather;
 });
 define('models/weather-photo',['backbone'], function(Backbone){
 	//SearchQuery Model to store query
 	var WeatherPhoto = Backbone.Model.extend({
-		keywords: null,
-		url: '/js/data/weather-images.json'
+		tags: null,
+		//url: '/js/data/weather-images.json',
+		url: function(){
+			var uri = 'https://api.500px.com/v1/photos/search?',
+				options = {
+					category: "Landscape",
+					consumer_key: "ciAqwxZNrq2bA4BootekUJxU6xEHiPIIjazPvLWj",
+					rpp: 50,
+					image_size: 4,
+					tag: this.tags !== null ? concatTags(this.tags) : ""
+				};
+
+			var endpoint = uri + getParameters();
+
+			function getParameters(){
+				var params = [];
+				for(key in options){
+					var value = options[key];
+					if(value !== "" && value !== null ){
+						params.push(key + "=" + value);
+					}
+				}
+				
+				return params.join("&");
+			}
+
+			function concatTags(data){
+				var data = data,
+					tags = [];
+
+				data.forEach(function(tag){
+					tags.push(encodeURIComponent(tag));
+				});
+
+				return tags.join(",");
+			}
+
+			return endpoint;
+		},
+		setProp: function(prop, val){
+			this[prop] = val;
+		}
 	});
 	return WeatherPhoto;
 });
@@ -78,8 +132,11 @@ define('views/location-view',[
 			// When the user selects an address from the dropdown,
 			// populate the address fields in the form.
 			google.maps.event.addListener(self.autocomplete, 'place_changed', function() {
-				//callback 
-				self.setLocation(self.autocomplete.getPlace());
+				var placesObj = self.autocomplete.getPlace();
+				//check if object has geometry to prevent error
+				if(placesObj.hasOwnProperty("geometry")){
+					self.setLocation(placesObj);
+				}				
 	  		});
 		},
 		geolocate: function() {
@@ -102,8 +159,6 @@ define('views/location-view',[
 			console.log("data.geometry.location: ", data.geometry.location);
 
 			this.model.set({"lat": loc.k, "lng": loc.A})
-			//this.$input.attr("data-lat", location.A);
-			//this.$input.attr("data-lng", location.k);	
 			
 			console.log("model", this.model.toJSON());		
 		},
@@ -120,6 +175,11 @@ define('views/location-view',[
 	      if(inputChanged && keyVal != self.keys.enter){
 	      	this.model.clear({"silent": true});
 	      }
+
+	      //Check if the enter button was clicked and validate form for submit
+	      if(this.validateLocation() && keyVal == self.keys.enter){
+	      	this.submitLocation();
+	      }
 			
 		},
 		submitLocation: function(){
@@ -131,7 +191,7 @@ define('views/location-view',[
 
 				Events.trigger("NewLocation", location);
 			} else { 
-				console.log("error message");
+				alert("please enter a valid location from the dropdown");
 			}
 		},
 		validateLocation: function(){
@@ -149,7 +209,7 @@ define('templates',[],function(){
 
   this["templates"]["photo"] = function(obj) {obj || (obj = {});var __t, __p = '', __e = _.escape;with (obj) {__p += '<div><img src="' +((__t = (image_url)) == null ? '' : __t) +'" width="200" /></div>\n';}return __p};
 
-  this["templates"]["weather"] = function(obj) {obj || (obj = {});var __t, __p = '', __e = _.escape;with (obj) {__p += '<div>' +((__t = (current_observation.temp_f)) == null ? '' : __t) +'&deg;</div>\n';}return __p};
+  this["templates"]["weather"] = function(obj) {obj || (obj = {});var __t, __p = '', __e = _.escape;with (obj) {__p += '<div>' +((__t = (current_observation.temp_f)) == null ? '' : __t) +'&deg;</div>\n<div>icon: ' +((__t = (current_observation.icon)) == null ? '' : __t) +'</div>\n';}return __p};
 
   return this["templates"];
 
@@ -185,6 +245,12 @@ define('views/weather-view',[
             console.log("render data", data);
         },
         getWeather: function(data){
+        	var data = data,
+        		lat = data.lat,
+        		lng = data.lng;
+   
+        	this.model.setProp("coordinates", data);
+
         	this.model.clear({"silent": true});
 
         	this.model.fetch();
@@ -239,27 +305,27 @@ define('views/weather-photo-view',[
             //Trigger event that photos are ready
             Events.trigger("NewPhoto");
 
+            console.log("render data", photo); 
             this.$el.html(this.template(photo));
-            console.log("render data", photo);
+           
         },
         getPhotos: function(data){
         	var forecast = data,
         		weatherConditions = this.getWeatherConditions(forecast.icon),
         		weatherTags = this.getWeatherTags(weatherConditions);
 
-        	console.log("weatherTags: ", weatherTags);
+        	//set tag property
+        	this.model.setProp("tags", weatherTags);
 
-        	
-
-        	//this.model.clear({"silent": true});
-        	//this.model.fetch();
+        	this.model.clear({"silent": true});
+        	this.model.fetch();
         },
         getWeatherConditions: function(forecast){
         	var forecast = forecast,
         		weatherType = "default",
         		typesOfWeather = [
 					{ "type": "sunny", "desc": ["sunny", "clear", "mostlysunny", "partlysunny", "unknown"] },
-					{ "type": "cloudy", "desc":["cloudy", "mostlycloudy", "partlycloudy"] },
+					{ "type": "cloudy", "desc":["cloudy", "clouds", "cloud", "partlycloudy"] },
 					{ "type": "fog", "desc": ["fog", "hazy"] },
 					{ "type": "rain", "desc": ["chancerain", "rain" ] },
 					{ "type": "snow", "desc": ["chanceflurries", "chancesnow", "flurries", "snow"] },
@@ -281,13 +347,14 @@ define('views/weather-photo-view',[
         getWeatherTags: function(weatherConditions){
         	var weatherConditions = weatherConditions,
         		tags ={
-        			"sunny": ["sunny", "clear", "mostlysunny", "partlysunny", "unknown"],
-					"cloudy": ["cloudy", "mostlycloudy", "partlycloudy"],
-					"fog": ["fog", "hazy"],
-					"rain": ["chancerain", "rain" ],
-					"snow": ["chanceflurries", "chancesnow", "flurries", "snow"],
-					"icy": ["chancesleet", "sleet"],
-					"thunderstorms": ["chancetstorms", "tstorms"]
+        			"default": ["sun", "outdoors", "sky", "nature"],
+        			"sunny": ["sunny", "sun", "sunshine", "summer"],
+					"cloudy": ["cloudy", "clouds", "cloud"],
+					"fog": ["foggy", "hazy", "fog", "haze"],
+					"rain": ["rain", "rainy", "showers", "raindrops" ],
+					"snow": ["snow", "blizzard", "snowflake"],
+					"icy": ["ice", "icy"],
+					"thunderstorms": ["lightning", "stormy", "thunderstorm", "thunderbolt"]
         		}
 
         	return tags[weatherConditions];

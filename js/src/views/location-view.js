@@ -39,8 +39,11 @@ define([
 			// When the user selects an address from the dropdown,
 			// populate the address fields in the form.
 			google.maps.event.addListener(self.autocomplete, 'place_changed', function() {
-				//callback 
-				self.setLocation(self.autocomplete.getPlace());
+				var placesObj = self.autocomplete.getPlace();
+				//check if object has geometry to prevent error
+				if(placesObj.hasOwnProperty("geometry")){
+					self.setLocation(placesObj);
+				}				
 	  		});
 		},
 		geolocate: function() {
@@ -63,8 +66,6 @@ define([
 			console.log("data.geometry.location: ", data.geometry.location);
 
 			this.model.set({"lat": loc.k, "lng": loc.A})
-			//this.$input.attr("data-lat", location.A);
-			//this.$input.attr("data-lng", location.k);	
 			
 			console.log("model", this.model.toJSON());		
 		},
@@ -81,6 +82,11 @@ define([
 	      if(inputChanged && keyVal != self.keys.enter){
 	      	this.model.clear({"silent": true});
 	      }
+
+	      //Check if the enter button was clicked and validate form for submit
+	      if(this.validateLocation() && keyVal == self.keys.enter){
+	      	this.submitLocation();
+	      }
 			
 		},
 		submitLocation: function(){
@@ -92,7 +98,7 @@ define([
 
 				Events.trigger("NewLocation", location);
 			} else { 
-				console.log("error message");
+				alert("please enter a valid location from the dropdown");
 			}
 		},
 		validateLocation: function(){

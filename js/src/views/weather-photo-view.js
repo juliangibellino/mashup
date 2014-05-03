@@ -28,27 +28,27 @@ define([
             //Trigger event that photos are ready
             Events.trigger("NewPhoto");
 
+            console.log("render data", photo); 
             this.$el.html(this.template(photo));
-            console.log("render data", photo);
+           
         },
         getPhotos: function(data){
         	var forecast = data,
         		weatherConditions = this.getWeatherConditions(forecast.icon),
         		weatherTags = this.getWeatherTags(weatherConditions);
 
-        	console.log("weatherTags: ", weatherTags);
+        	//set tag property
+        	this.model.setProp("tags", weatherTags);
 
-        	
-
-        	//this.model.clear({"silent": true});
-        	//this.model.fetch();
+        	this.model.clear({"silent": true});
+        	this.model.fetch();
         },
         getWeatherConditions: function(forecast){
         	var forecast = forecast,
         		weatherType = "default",
         		typesOfWeather = [
 					{ "type": "sunny", "desc": ["sunny", "clear", "mostlysunny", "partlysunny", "unknown"] },
-					{ "type": "cloudy", "desc":["cloudy", "mostlycloudy", "partlycloudy"] },
+					{ "type": "cloudy", "desc":["cloudy", "clouds", "cloud", "partlycloudy"] },
 					{ "type": "fog", "desc": ["fog", "hazy"] },
 					{ "type": "rain", "desc": ["chancerain", "rain" ] },
 					{ "type": "snow", "desc": ["chanceflurries", "chancesnow", "flurries", "snow"] },
@@ -70,13 +70,14 @@ define([
         getWeatherTags: function(weatherConditions){
         	var weatherConditions = weatherConditions,
         		tags ={
-        			"sunny": ["sunny", "clear", "mostlysunny", "partlysunny", "unknown"],
-					"cloudy": ["cloudy", "mostlycloudy", "partlycloudy"],
-					"fog": ["fog", "hazy"],
-					"rain": ["chancerain", "rain" ],
-					"snow": ["chanceflurries", "chancesnow", "flurries", "snow"],
-					"icy": ["chancesleet", "sleet"],
-					"thunderstorms": ["chancetstorms", "tstorms"]
+        			"default": ["sun", "outdoors", "sky", "nature"],
+        			"sunny": ["sunny", "sun", "sunshine", "summer"],
+					"cloudy": ["cloudy", "clouds", "cloud"],
+					"fog": ["foggy", "hazy", "fog", "haze"],
+					"rain": ["rain", "rainy", "showers", "raindrops" ],
+					"snow": ["snow", "blizzard", "snowflake"],
+					"icy": ["ice", "icy"],
+					"thunderstorms": ["lightning", "stormy", "thunderstorm", "thunderbolt"]
         		}
 
         	return tags[weatherConditions];

@@ -29,6 +29,12 @@ define([
             console.log("render data", data);
         },
         getWeather: function(data){
+        	var data = data,
+        		lat = data.lat,
+        		lng = data.lng;
+   
+        	this.model.setProp("coordinates", data);
+
         	this.model.clear({"silent": true});
 
         	this.model.fetch();
