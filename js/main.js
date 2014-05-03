@@ -39,6 +39,31 @@ define('models/weather',['backbone'], function(Backbone){
 		},
 		setProp: function(prop, val){
 			this[prop] = val;
+		},
+		weatherIcon: {
+			"chanceflurries": "U",
+			"chancerain": "Q",
+			"chancesleet": "X",
+			"chancesnow": "W",
+			"chancetstorms": "Z",
+			"clear": "B",
+			"cloudy": "N",
+			"flurries": "U",
+			"fog": "M",
+			"hazy": "L",
+			"mostlycloudy": "Y",
+			"mostlysunny": "H",
+			"partlycloudy": "H",
+			"partlysunny": "H",
+			"sleet": "X",
+			"rain": "R",
+			"snow": "W",
+			"sunny": "B",
+			"tstorms": "0",
+			"unknown": "B"
+		},
+		getWeatherIcon: function(prop){
+			return this.weatherIcon[prop];
 		}
 	});
 	return Weather;
@@ -107,6 +132,9 @@ define('views/location-view',[
 
 			self.setupAutocomplete();
 		},
+		/**
+		 * Keyboard keys
+		 */
 		keys: {
 			arrowUp: 38,
 			arrowDown: 40,
@@ -114,11 +142,17 @@ define('views/location-view',[
 			esc: 27,
 			tab: 9
 		},
+		/**
+		 * Dom events
+		 */
 		events: function(){
 			this.$input.on("focus", $.proxy(this.geolocate, this));
 			this.$input.on("keyup", $.proxy(this.checkInputChange, this));
 			$("#location-submit", this.$el).on("click", $.proxy(this.submitLocation, this));
 		},
+		/**
+		 * Setup Google places autocomplete input
+		 */
 		setupAutocomplete: function(){
 			var self = this;
 
@@ -139,6 +173,9 @@ define('views/location-view',[
 				}				
 	  		});
 		},
+		/**
+		 * Setup Google geolocate object
+		 */
 		geolocate: function() {
 		  var self = this;
 
@@ -152,16 +189,20 @@ define('views/location-view',[
 		    });
 		  }
 		},
+		/**
+		 * Set users location in model based on input
+		 */
 		setLocation: function(data){
 			var data = data,
 				loc = data.geometry.location;
 
-			console.log("data.geometry.location: ", data.geometry.location);
-
+			//set model with coordinates
 			this.model.set({"lat": loc.k, "lng": loc.A})
-			
-			console.log("model", this.model.toJSON());		
 		},
+		/**
+		 * Check if the value of the input has changed when a user presses a keyboard key
+		 * @param  {Object} e Dom event object
+		 */
 		checkInputChange: function(e){
 			var self = this,
 				keyVal = e.which,
@@ -171,32 +212,50 @@ define('views/location-view',[
 	      //Set inputPrevVal to new value
 	      self.inputPrevVal = inputVal;
 
-	      //Check to see if the input value has changed and the enter key was not pressed
+	      
 	      if(inputChanged && keyVal != self.keys.enter){
+	      	//Check to see if the input value has changed and the enter key was not pressed
 	      	this.model.clear({"silent": true});
-	      }
-
-	      //Check if the enter button was clicked and validate form for submit
-	      if(this.validateLocation() && keyVal == self.keys.enter){
+	      } else if(this.validateLocation() && keyVal == self.keys.enter){
+	      	//Check if the enter button was clicked and validate form for submit
 	      	this.submitLocation();
 	      }
-			
 		},
+		/**
+		 * Sumbit form
+		 */
 		submitLocation: function(){
-			//check if lat/lng attr are available
+			
 			if(this.validateLocation()){
+			//if form is valid
 				var location = this.model.toJSON();
-
-				console.log("submit location");
-
+				//remove any error messages
+				this.toggleError(false);
+				//broadcast event that a new location is available and pass its data
 				Events.trigger("NewLocation", location);
 			} else { 
-				alert("please enter a valid location from the dropdown");
+			//if form is invalid show error messages
+				this.toggleError(true);
 			}
 		},
+		/**
+		 * Validate users location
+		 */
 		validateLocation: function(){
 			var hasLocation = this.model.has("lat") && this.model.has("lng");
 			return hasLocation;
+		},
+		/**
+		 * Hide/Show error messages
+		 * @param  {Boolean} isError Argument to determine to hide/show
+		 */
+		toggleError: function(isError){
+			var isError = isError;
+			if(isError){
+				this.$el.addClass("error");
+			} else {
+				this.$el.removeClass("error");
+			}
 		}
 		
 	});
@@ -207,9 +266,11 @@ define('templates',[],function(){
 
   this["templates"] = this["templates"] || {};
 
-  this["templates"]["photo"] = function(obj) {obj || (obj = {});var __t, __p = '', __e = _.escape;with (obj) {__p += '<div><img src="' +((__t = (image_url)) == null ? '' : __t) +'" width="200" /></div>\n';}return __p};
+  this["templates"]["loader"] = function(obj) {obj || (obj = {});var __t, __p = '', __e = _.escape;with (obj) {__p += '<div class="loader"></div>';}return __p};
 
-  this["templates"]["weather"] = function(obj) {obj || (obj = {});var __t, __p = '', __e = _.escape;with (obj) {__p += '<div>' +((__t = (current_observation.temp_f)) == null ? '' : __t) +'&deg;</div>\n<div>icon: ' +((__t = (current_observation.icon)) == null ? '' : __t) +'</div>\n';}return __p};
+  this["templates"]["photo"] = function(obj) {obj || (obj = {});var __t, __p = '', __e = _.escape;with (obj) {__p += '<img src="' +((__t = (image_url)) == null ? '' : __t) +'" />';}return __p};
+
+  this["templates"]["weather"] = function(obj) {obj || (obj = {});var __t, __p = '', __e = _.escape;with (obj) {__p += '<div class="forecast">\n\t<p class="icon">' +((__t = (icon)) == null ? '' : __t) +'</p>\n\t<p class="temp">' +((__t = (temp)) == null ? '' : __t) +'&deg;</p>\n</div>';}return __p};
 
   return this["templates"];
 
@@ -223,38 +284,64 @@ define('views/weather-view',[
 	
 	var WeatherView = Backbone.View.extend({
 		el: "#weather",
-		template: templates['weather'],
+		templateLoader: templates['loader'],
+		templateWeather: templates['weather'],
 		initialize: function(){
 			var that = this;
 
 			that.subscribe();
 		},
+		/**
+		 * Subscribe to broadcrasted events
+		 */
 		subscribe: function() {
 			var that = this;
 			
 			Events.on("NewLocation", this.getWeather, this);
-			Events.on("NewPhoto", this.render, this);
-
+			Events.on("NewPhoto", this.renderWeather, this);
 			that.listenTo(that.model, 'change', that.weatherUpdated);
 		},
-		render: function(){
+		/**
+		 * Render weather details based on model data
+		 */
+		renderWeather: function(){
             var that = this,
-            	data = this.model.toJSON();
-
-            this.$el.html(this.template(data));
-            console.log("render data", data);
+            	data = this.model.toJSON(),
+            	forecast = {
+            		"icon": this.model.getWeatherIcon(data.current_observation.icon),
+            		"temp": Math.round(data.current_observation.temp_f)
+            	}
+            //render compiled template to $el
+            this.$el.html(this.templateWeather(forecast));
         },
+        /**
+         * Render loader
+         */
+        renderLoader: function(){
+        	//render compiled template to $el
+        	this.$el.html(this.templateLoader());
+        },
+        /**
+         * Get weather from web service based on users coordinates
+         * @param  {Object} data Object containing coordinates of user input
+         */
         getWeather: function(data){
         	var data = data,
         		lat = data.lat,
         		lng = data.lng;
-   
+
+   			//set coordinates property in model for api use
         	this.model.setProp("coordinates", data);
-
+        	//clear current model
         	this.model.clear({"silent": true});
-
+        	//fetch new data
         	this.model.fetch();
+        	//render loader to indicate that it is processing request
+        	this.renderLoader();
         },
+        /**
+         * Broadcast event that the weather data has been retrieve and send data out
+         */
         weatherUpdated: function(){
         	var data = this.model.toJSON(),
         		forecast = data.current_observation,
@@ -270,7 +357,6 @@ define('views/weather-view',[
 
         	Events.trigger("NewForecast", weatherDetails)
         }
-		
 	});
 
 	return WeatherView;
@@ -287,14 +373,21 @@ define('views/weather-photo-view',[
 		initialize: function(){
 			var that = this;
 
+			//Subscribe to events
 			that.subscribe();
 		},
+		/**
+		 * Subscribe to broadcrasted events
+		 */
 		subscribe: function() {
 			var that = this;
 			
 			Events.on("NewForecast", this.getPhotos, this);
 			that.listenTo(that.model, 'change', that.render);
 		},
+		/**
+		 * Render retrieve image to dom
+		 */
 		render: function(){
             var that = this,
             	data = this.model.toJSON(),
@@ -302,13 +395,15 @@ define('views/weather-photo-view',[
             	randomIndex = _.random(0, (photos.length - 1)),
             	photo = photos[randomIndex];
             
-            //Trigger event that photos are ready
+            //broadcast event that photos have been retrieved
             Events.trigger("NewPhoto");
-
-            console.log("render data", photo); 
-            this.$el.html(this.template(photo));
-           
+            //render compiled template to $el
+            this.$el.html(this.template(photo)); 
         },
+        /**
+         * Get weather conditions and submit request to get related photos
+         * @param  {Object} data Data object containing weather details
+         */
         getPhotos: function(data){
         	var forecast = data,
         		weatherConditions = this.getWeatherConditions(forecast.icon),
@@ -316,10 +411,16 @@ define('views/weather-photo-view',[
 
         	//set tag property
         	this.model.setProp("tags", weatherTags);
-
+        	//clear model
         	this.model.clear({"silent": true});
+        	//make request for new data
         	this.model.fetch();
         },
+        /**
+         * Determine the type of weather conditions relate to the current request
+         * @param  {Sting} forecast  Data that signifys the description of the weather conditions (ex. "sunny") 
+         * @return {String}          Weather condition type 
+         */
         getWeatherConditions: function(forecast){
         	var forecast = forecast,
         		weatherType = "default",
@@ -344,6 +445,11 @@ define('views/weather-photo-view',[
 
 			return weatherType;
         },
+        /**
+         * Get tags that relate to the type of weather
+         * @param  {String} weatherConditions Identifier of the weather type
+         * @return {Array}                    An array of tags
+         */
         getWeatherTags: function(weatherConditions){
         	var weatherConditions = weatherConditions,
         		tags ={
@@ -377,11 +483,11 @@ define('modules/app',[
 	function($, Events, LocationFinder, Weather, WeatherPhoto, LocationFinderView, WeatherView, WeatherPhotoView){
 	var App = {
 		init: function(){
-			
+			//instantiate models
 			var locationFinder = new LocationFinder();
 			var weather = new Weather();
 			var weatherPhoto = new WeatherPhoto();
-
+			//instantiate views
 			var locationFinderView = new LocationFinderView({"el": '#location-finder', "model": locationFinder});
 			var weatherView = new WeatherView({"el": "#weather", "model": weather});
 			var weatherPhotoView = new WeatherPhotoView({"el": "#photo", "model": weatherPhoto});

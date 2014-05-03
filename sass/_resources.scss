@@ -1,0 +1,38 @@
+/*-----------------
+	COLORS
+-----------------*/
+$white: #fff;
+$black: #000;
+$dkGrey: #1e1e1e;
+
+$opBlack60: rgba(0,0,0,0.6);
+$opBlack75: rgba(0,0,0,0.75);
+
+
+/*-----------------
+	FONTS
+-----------------*/
+$WisdomScript: WisdomScript, Arial, sans-serif;
+$Meteo: MeteoconsRegular, sans-serif;
+$Oswald: Oswald, sans-serif;
+
+/*--------------
+ 	MIXINS
+ --------------*/
+@mixin box-sizing($type){
+	-webkit-box-sizing: $type;
+	   -moz-box-sizing: $type;
+	     -o-box-sizing: $type;
+	    -ms-box-sizing: $type;
+	        box-sizing: $type;
+}
+@mixin clear-after(){
+	content: ".";
+	clear: both;
+	display: block;
+	height: 0;
+	overflow: hidden;
+}
+@mixin doublTextShadow(){
+	text-shadow: 0 -1px 0 rgba(0,0,0,0.3), 0 1px 0 rgba(0,0,0,0.3);
+}

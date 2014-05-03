@@ -15,6 +15,31 @@ define(['backbone'], function(Backbone){
 		},
 		setProp: function(prop, val){
 			this[prop] = val;
+		},
+		weatherIcon: {
+			"chanceflurries": "U",
+			"chancerain": "Q",
+			"chancesleet": "X",
+			"chancesnow": "W",
+			"chancetstorms": "Z",
+			"clear": "B",
+			"cloudy": "N",
+			"flurries": "U",
+			"fog": "M",
+			"hazy": "L",
+			"mostlycloudy": "Y",
+			"mostlysunny": "H",
+			"partlycloudy": "H",
+			"partlysunny": "H",
+			"sleet": "X",
+			"rain": "R",
+			"snow": "W",
+			"sunny": "B",
+			"tstorms": "0",
+			"unknown": "B"
+		},
+		getWeatherIcon: function(prop){
+			return this.weatherIcon[prop];
 		}
 	});
 	return Weather;

@@ -10,14 +10,21 @@ define([
 		initialize: function(){
 			var that = this;
 
+			//Subscribe to events
 			that.subscribe();
 		},
+		/**
+		 * Subscribe to broadcrasted events
+		 */
 		subscribe: function() {
 			var that = this;
 			
 			Events.on("NewForecast", this.getPhotos, this);
 			that.listenTo(that.model, 'change', that.render);
 		},
+		/**
+		 * Render retrieve image to dom
+		 */
 		render: function(){
             var that = this,
             	data = this.model.toJSON(),
@@ -25,13 +32,15 @@ define([
             	randomIndex = _.random(0, (photos.length - 1)),
             	photo = photos[randomIndex];
             
-            //Trigger event that photos are ready
+            //broadcast event that photos have been retrieved
             Events.trigger("NewPhoto");
-
-            console.log("render data", photo); 
-            this.$el.html(this.template(photo));
-           
+            //render compiled template to $el
+            this.$el.html(this.template(photo)); 
         },
+        /**
+         * Get weather conditions and submit request to get related photos
+         * @param  {Object} data Data object containing weather details
+         */
         getPhotos: function(data){
         	var forecast = data,
         		weatherConditions = this.getWeatherConditions(forecast.icon),
@@ -39,10 +48,16 @@ define([
 
         	//set tag property
         	this.model.setProp("tags", weatherTags);
-
+        	//clear model
         	this.model.clear({"silent": true});
+        	//make request for new data
         	this.model.fetch();
         },
+        /**
+         * Determine the type of weather conditions relate to the current request
+         * @param  {Sting} forecast  Data that signifys the description of the weather conditions (ex. "sunny") 
+         * @return {String}          Weather condition type 
+         */
         getWeatherConditions: function(forecast){
         	var forecast = forecast,
         		weatherType = "default",
@@ -67,6 +82,11 @@ define([
 
 			return weatherType;
         },
+        /**
+         * Get tags that relate to the type of weather
+         * @param  {String} weatherConditions Identifier of the weather type
+         * @return {Array}                    An array of tags
+         */
         getWeatherTags: function(weatherConditions){
         	var weatherConditions = weatherConditions,
         		tags ={

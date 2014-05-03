@@ -12,11 +12,11 @@ define([
 	function($, Events, LocationFinder, Weather, WeatherPhoto, LocationFinderView, WeatherView, WeatherPhotoView){
 	var App = {
 		init: function(){
-			
+			//instantiate models
 			var locationFinder = new LocationFinder();
 			var weather = new Weather();
 			var weatherPhoto = new WeatherPhoto();
-
+			//instantiate views
 			var locationFinderView = new LocationFinderView({"el": '#location-finder', "model": locationFinder});
 			var weatherView = new WeatherView({"el": "#weather", "model": weather});
 			var weatherPhotoView = new WeatherPhotoView({"el": "#photo", "model": weatherPhoto});

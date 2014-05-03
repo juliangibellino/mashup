@@ -14,6 +14,9 @@ define([
 
 			self.setupAutocomplete();
 		},
+		/**
+		 * Keyboard keys
+		 */
 		keys: {
 			arrowUp: 38,
 			arrowDown: 40,
@@ -21,11 +24,17 @@ define([
 			esc: 27,
 			tab: 9
 		},
+		/**
+		 * Dom events
+		 */
 		events: function(){
 			this.$input.on("focus", $.proxy(this.geolocate, this));
 			this.$input.on("keyup", $.proxy(this.checkInputChange, this));
 			$("#location-submit", this.$el).on("click", $.proxy(this.submitLocation, this));
 		},
+		/**
+		 * Setup Google places autocomplete input
+		 */
 		setupAutocomplete: function(){
 			var self = this;
 
@@ -46,6 +55,9 @@ define([
 				}				
 	  		});
 		},
+		/**
+		 * Setup Google geolocate object
+		 */
 		geolocate: function() {
 		  var self = this;
 
@@ -59,16 +71,20 @@ define([
 		    });
 		  }
 		},
+		/**
+		 * Set users location in model based on input
+		 */
 		setLocation: function(data){
 			var data = data,
 				loc = data.geometry.location;
 
-			console.log("data.geometry.location: ", data.geometry.location);
-
+			//set model with coordinates
 			this.model.set({"lat": loc.k, "lng": loc.A})
-			
-			console.log("model", this.model.toJSON());		
 		},
+		/**
+		 * Check if the value of the input has changed when a user presses a keyboard key
+		 * @param  {Object} e Dom event object
+		 */
 		checkInputChange: function(e){
 			var self = this,
 				keyVal = e.which,
@@ -78,32 +94,50 @@ define([
 	      //Set inputPrevVal to new value
 	      self.inputPrevVal = inputVal;
 
-	      //Check to see if the input value has changed and the enter key was not pressed
+	      
 	      if(inputChanged && keyVal != self.keys.enter){
+	      	//Check to see if the input value has changed and the enter key was not pressed
 	      	this.model.clear({"silent": true});
-	      }
-
-	      //Check if the enter button was clicked and validate form for submit
-	      if(this.validateLocation() && keyVal == self.keys.enter){
+	      } else if(this.validateLocation() && keyVal == self.keys.enter){
+	      	//Check if the enter button was clicked and validate form for submit
 	      	this.submitLocation();
 	      }
-			
 		},
+		/**
+		 * Sumbit form
+		 */
 		submitLocation: function(){
-			//check if lat/lng attr are available
+			
 			if(this.validateLocation()){
+			//if form is valid
 				var location = this.model.toJSON();
-
-				console.log("submit location");
-
+				//remove any error messages
+				this.toggleError(false);
+				//broadcast event that a new location is available and pass its data
 				Events.trigger("NewLocation", location);
 			} else { 
-				alert("please enter a valid location from the dropdown");
+			//if form is invalid show error messages
+				this.toggleError(true);
 			}
 		},
+		/**
+		 * Validate users location
+		 */
 		validateLocation: function(){
 			var hasLocation = this.model.has("lat") && this.model.has("lng");
 			return hasLocation;
+		},
+		/**
+		 * Hide/Show error messages
+		 * @param  {Boolean} isError Argument to determine to hide/show
+		 */
+		toggleError: function(isError){
+			var isError = isError;
+			if(isError){
+				this.$el.addClass("error");
+			} else {
+				this.$el.removeClass("error");
+			}
 		}
 		
 	});
